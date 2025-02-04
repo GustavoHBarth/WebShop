@@ -55,12 +55,13 @@ namespace WebShop.Web.Services
             }
             return productVM;
         }
-    
+
         public async Task<ProductViewModel> CreateProduct(ProductViewModel productVM)
         {
             var client = _clientFactory.CreateClient("ProductApi");
 
-            StringContent content = new StringContent(JsonSerializer.Serialize(productVM), Encoding.UTF8, "application/json");
+            StringContent content = new StringContent(JsonSerializer.Serialize(productVM),
+                                                      Encoding.UTF8, "application/json");
 
             using (var response = await client.PostAsync(apiEndpoint, content))
             {
@@ -68,11 +69,12 @@ namespace WebShop.Web.Services
                 {
                     var apiResponse = await response.Content.ReadAsStreamAsync();
                     productVM = await JsonSerializer
-                                .DeserializeAsync<ProductViewModel>(apiResponse, _options);
+                               .DeserializeAsync<ProductViewModel>(apiResponse, _options);
                 }
                 else
                 {
                     return null;
+                    //throw new HttpRequestException(response.ReasonPhrase);
                 }
             }
             return productVM;

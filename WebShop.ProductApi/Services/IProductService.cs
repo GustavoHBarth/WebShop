@@ -1,4 +1,5 @@
-﻿using WebShop.ProductApi.DTOs;
+﻿using VShop.ProductApi.DTOs;
+using WebShop.ProductApi.DTOs;
 
 namespace WebShop.ProductApi.Services;
 
