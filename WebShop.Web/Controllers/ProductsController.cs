@@ -48,5 +48,26 @@ namespace WebShop.Web.Controllers
             return View(productVM);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> UpdateProduct(int id)
+        {
+            ViewBag.CategoryId = new SelectList(await _categoryService.GetAllCategories(), "CategoryId", "Name");
+            var result = await _productService.FindProductById(id);
+            if (result is null) return View("Error");
+            return View(result);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateProduct(ProductViewModel productVM)
+        {
+            if (ModelState.IsValid)
+            {
+                var result = await _productService.UpdateProduct(productVM);
+
+                if (result != null)
+                    return RedirectToAction(nameof(Index));
+            }
+            return View(productVM);
+        }
     }
 }
