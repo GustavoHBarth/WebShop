@@ -53,7 +53,10 @@ namespace WebShop.Web.Controllers
         {
             ViewBag.CategoryId = new SelectList(await _categoryService.GetAllCategories(), "CategoryId", "Name");
             var result = await _productService.FindProductById(id);
-            if (result is null) return View("Error");
+
+            if (result is null) 
+                return View("Error");
+
             return View(result);
         }
 
@@ -68,6 +71,28 @@ namespace WebShop.Web.Controllers
                     return RedirectToAction(nameof(Index));
             }
             return View(productVM);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DeleteProduct(int id)
+        {
+            var result = await _productService.FindProductById(id);
+
+            if (result is null) 
+                return View("Error");
+
+            return View(result);
+        }
+
+        [HttpPost(), ActionName("DeleteProduct")]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var result = await _productService.DeleteProductById(id);
+
+            if (!result)
+                return View("Error");
+
+            return RedirectToAction("Index");
         }
     }
 }
