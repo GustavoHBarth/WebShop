@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using WebShop.Web.Models;
+using WebShop.Web.Roles;
 using WebShop.Web.Services.Contracts;
 
 namespace WebShop.Web.Controllers
@@ -31,7 +34,9 @@ namespace WebShop.Web.Controllers
             ViewBag.CategoryId = new SelectList(await _categoryService.GetAllCategories(), "CategoryId", "Name");
             return View();
         }
+
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> CreateProduct(ProductViewModel productVM)
         {
             if (ModelState.IsValid)
@@ -61,6 +66,7 @@ namespace WebShop.Web.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> UpdateProduct(ProductViewModel productVM)
         {
             if (ModelState.IsValid)
@@ -74,6 +80,7 @@ namespace WebShop.Web.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var result = await _productService.FindProductById(id);
@@ -85,6 +92,7 @@ namespace WebShop.Web.Controllers
         }
 
         [HttpPost(), ActionName("DeleteProduct")]
+        [Authorize(Roles = Role.Admin)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var result = await _productService.DeleteProductById(id);
