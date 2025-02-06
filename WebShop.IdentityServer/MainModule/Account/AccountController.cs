@@ -340,7 +340,7 @@ namespace IdentityServerHost.Quickstart.UI
 
         private async Task<LoggedOutViewModel> BuildLoggedOutViewModelAsync(string logoutId)
         {
-            // get context information (client name, post logout redirect URI and iframe for federated signout)
+            // Obtenha as informações de contexto (nome do cliente, URI de redirecionamento pós-logout e iframe para logout federado)
             var logout = await _interaction.GetLogoutContextAsync(logoutId);
 
             var vm = new LoggedOutViewModel
@@ -352,23 +352,35 @@ namespace IdentityServerHost.Quickstart.UI
                 LogoutId = logoutId
             };
 
-            if (User?.Identity.IsAuthenticated == true)
+            if (User?.Identity?.IsAuthenticated == true)
             {
                 var idp = User.FindFirst(JwtClaimTypes.IdentityProvider)?.Value;
-                if (idp != null && idp != Duende.IdentityServer.IdentityServerConstants.LocalIdentityProvider)
+                if (!string.IsNullOrEmpty(idp) && idp != Duende.IdentityServer.IdentityServerConstants.LocalIdentityProvider)
                 {
-                    var providerSupportsSignout = await HttpContext.GetSchemeSupportsSignOutAsync(idp);
-                    if (providerSupportsSignout)
-                    {
-                        if (vm.LogoutId == null)
-                        {
-                            // if there's no current logout context, we need to create one
-                            // this captures necessary info from the current logged in user
-                            // before we signout and redirect away to the external IdP for signout
-                            vm.LogoutId = await _interaction.CreateLogoutContextAsync();
-                        }
+                    // Obtém o serviço de provedor de esquemas de autenticação
+                    var schemeProvider = HttpContext.RequestServices.GetRequiredService<IAuthenticationSchemeProvider>();
+                    var scheme = await schemeProvider.GetSchemeAsync(idp);
 
-                        vm.ExternalAuthenticationScheme = idp;
+                    // Certifique-se de que o scheme foi encontrado
+                    if (scheme != null)
+                    {
+                        // Obtém o handler do provedor de autenticação para verificar se ele suporta o logout
+                        var handlerProvider = HttpContext.RequestServices.GetRequiredService<IAuthenticationHandlerProvider>();
+                        var handler = await handlerProvider.GetHandlerAsync(HttpContext, scheme.Name);
+
+                        // Verifique se o handler implementa IAuthenticationSignOutHandler, que é responsável por fazer o logout
+                        var providerSupportsSignout = handler is IAuthenticationSignOutHandler;
+
+                        if (providerSupportsSignout)
+                        {
+                            if (string.IsNullOrEmpty(vm.LogoutId))
+                            {
+                                // Se não houver um contexto de logout, criamos um novo
+                                vm.LogoutId = await _interaction.CreateLogoutContextAsync();
+                            }
+
+                            vm.ExternalAuthenticationScheme = idp;
+                        }
                     }
                 }
             }
@@ -377,3 +389,4 @@ namespace IdentityServerHost.Quickstart.UI
         }
     }
 }
+
