@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MySqlConnector;
 using WebShop.IdentityServer.Configuration;
 using WebShop.IdentityServer.Data;
+using WebShop.IdentityServer.SeedDataBase;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +33,8 @@ var builderIdentityServer = builder.Services.AddIdentityServer(options =>
    
 builderIdentityServer.AddDeveloperSigningCredential();
 
+builder.Services.AddScoped<IDataBaseSeedInitializer, DatabaseIdentityServerInitializer>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -49,8 +52,22 @@ app.UseRouting();
 app.UseIdentityServer();
 app.UseAuthorization();
 
+SeedDatabaseIdentityServer(app);
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
+void SeedDatabaseIdentityServer(IApplicationBuilder app)
+{
+    using (var serviceScope = app.ApplicationServices.CreateScope())
+    {
+        var initRolesUsers = serviceScope.ServiceProvider
+                               .GetService<IDataBaseSeedInitializer>();
+
+        initRolesUsers.InitializerSeedRoles();
+        initRolesUsers.InitializerSeedUsers();
+    }
+}
